@@ -13,6 +13,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: 'master'
+
+    # Should be used if app requires logins or tokens outside of the usual deployment logins or tokens
     - name: Decrypt large secret
       run: ./decrypt.sh
       env:
@@ -28,13 +30,14 @@ jobs:
         docker build -f ./docker/Dockerfile . -t tbsacr.azurecr.io/[DNS_NAME]:${{ github.sha }}
         docker push tbsacr.azurecr.io/[DNS_NAME]:${{ github.sha }}
 
-    # Set the target AKS cluster.
+    # Set the target AKS cluster (part-1)
     - uses: Azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
         cluster-name: tbs-prod-aks
         resource-group: tbs-prod-rg
 
+    # Set the target AKS cluster (part-2)
     - uses: Azure/k8s-deploy@v1
       with:
         manifests: |
