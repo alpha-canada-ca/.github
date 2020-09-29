@@ -2,19 +2,18 @@ name: [GitHub_action_template]
 on:
   pull_request:
     branches:
-    - master
+    - master #snapshot
   push:
     branches:
-    - master
+    - master #snapshot
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    # checks out master branch
     - uses: actions/checkout@v2
       with:
         ref: 'master'
-
-    # Should be used if app requires logins or tokens outside of the usual deployment logins or tokens
     - name: Decrypt large secret
       run: ./decrypt.sh
       env:
@@ -30,14 +29,13 @@ jobs:
         docker build -f ./docker/Dockerfile . -t tbsacr.azurecr.io/[DNS_NAME]:${{ github.sha }}
         docker push tbsacr.azurecr.io/[DNS_NAME]:${{ github.sha }}
 
-    # Set the target AKS cluster (part-1)
+    # Set the target AKS cluster.
     - uses: Azure/aks-set-context@v1
       with:
         creds: '${{ secrets.AZURE_CREDENTIALS }}'
         cluster-name: tbs-prod-aks
         resource-group: tbs-prod-rg
-
-    # Set the target AKS cluster (part-2)
+    # Deploys docker image created to kubernetes
     - uses: Azure/k8s-deploy@v1
       with:
         manifests: |
